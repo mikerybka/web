@@ -1,19 +1,18 @@
 package auth
 
 import (
-	"flag"
 	"net/http"
 
 	"github.com/mikerybka/web"
 )
 
 func SignUp() {
-	var firstName, lastName, email, phone string
-	flag.StringVar(&firstName, "first-name", "", "")
-	flag.StringVar(&lastName, "last-name", "", "")
-	flag.StringVar(&email, "email", "", "")
-	flag.StringVar(&phone, "phone", "", "")
-	flag.Parse()
+	r := web.Request("/auth/sign-up", "POST")
+	r.ParseForm()
+	firstName := r.FormValue("first-name")
+	lastName := r.FormValue("last-name")
+	email := r.FormValue("email")
+	phone := r.FormValue("phone")
 
 	db := web.NewDB("/data")
 
@@ -41,4 +40,6 @@ func SignUp() {
 	if err != nil {
 		web.Return(http.StatusInternalServerError, err.Error())
 	}
+
+	web.Redirect("/auth/sign-in")
 }
