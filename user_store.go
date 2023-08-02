@@ -10,6 +10,19 @@ type UserStore struct {
 	Dir string
 }
 
+func (us *UserStore) Get(id ID) (*User, error) {
+	b, err := os.ReadFile(filepath.Join(us.Dir, id.String()+".json"))
+	if err != nil {
+		return nil, err
+	}
+	var user User
+	err = json.Unmarshal(b, &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (us *UserStore) Put(id ID, user User) error {
 	b, err := json.MarshalIndent(user, "", "  ")
 	if err != nil {

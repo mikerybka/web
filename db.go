@@ -15,3 +15,11 @@ func NewDB(dir string) *DB {
 func (db *DB) Users() *UserStore {
 	return &UserStore{Dir: filepath.Join(db.Dir, "users")}
 }
+
+func (db *DB) Sessions() *SessionStore {
+	return &SessionStore{Dir: filepath.Join(db.Dir, "sessions")}
+}
+
+func (db *DB) SignInCodes() *SignInCodeStore {
+	return &SignInCodeStore{Dir: filepath.Join(db.Dir, "sign_in_codes")}
+}

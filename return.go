@@ -7,5 +7,9 @@ import (
 
 func Return(statusCode int, err string) {
 	fmt.Println(err)
-	os.Exit(statusCode)
+	exitCode := statusCode
+	if exitCode == 200 {
+		exitCode = 0
+	}
+	os.Exit(exitCode)
 }
