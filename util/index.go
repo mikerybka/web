@@ -1,7 +1,7 @@
 package util
 
 import (
-	"encoding/json"
+	"errors"
 	"os"
 
 	"github.com/mikerybka/web/types"
@@ -12,35 +12,23 @@ type Index struct {
 }
 
 func (i *Index) Get(key string) (types.ID, bool) {
-	b, err := os.ReadFile(i.File)
+	index := map[string]types.ID{}
+	err := ReadJSON(i.File, &index)
 	if err != nil {
 		return 0, false
-	}
-	index := map[string]types.ID{}
-	err = json.Unmarshal(b, &index)
-	if err != nil {
-		panic(err)
 	}
 	val, ok := index[key]
 	return val, ok
 }
 
 func (i *Index) Set(key string, val types.ID) error {
-	b, err := os.ReadFile(i.File)
-	if err != nil {
+	index := map[string]types.ID{}
+	err := ReadJSON(i.File, &index)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
-	index := map[string]types.ID{}
-	err = json.Unmarshal(b, &index)
-	if err != nil {
-		panic(err)
-	}
 	index[key] = val
-	b, err = json.Marshal(index)
-	if err != nil {
-		panic(err)
-	}
-	err = os.WriteFile(i.File, b, 0644)
+	err = WriteJSON(i.File, index)
 	if err != nil {
 		return err
 	}
