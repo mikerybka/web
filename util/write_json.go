@@ -15,5 +15,6 @@ func WriteJSON(filename string, v any) error {
 	if err != nil {
 		return err
 	}
+	b = append(b, '\n')
 	return os.WriteFile(filename, b, 0644)
 }
