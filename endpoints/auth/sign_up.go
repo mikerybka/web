@@ -16,29 +16,14 @@ func SignUp() {
 
 	db := web.NewDB("/data")
 
-	_, ok := db.Users().EmailIndex().Get(email)
-	if ok {
-		web.Return(http.StatusBadRequest, "email already registered")
-	}
-
-	_, ok = db.Users().PhoneIndex().Get(phone)
-	if ok {
-		web.Return(http.StatusBadRequest, "phone already registered")
-	}
-
-	id := db.Users().NextID()
-
-	user := web.User{
-		ID:        id,
-		FirstName: firstName,
-		LastName:  lastName,
-		Email:     email,
-		Phone:     phone,
-	}
-
-	err := db.Users().Put(id, user)
+	_, err := db.Users().Create(
+		firstName,
+		lastName,
+		email,
+		phone,
+	)
 	if err != nil {
-		web.Return(http.StatusInternalServerError, err.Error())
+		web.Return(http.StatusBadRequest, err.Error())
 	}
 
 	web.Redirect("/auth/sign-in")

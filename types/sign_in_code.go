@@ -1,4 +1,4 @@
-package web
+package types
 
 type SignInCode struct {
 	Code   string

@@ -6,13 +6,16 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+
+	"github.com/mikerybka/web/types"
+	"github.com/mikerybka/web/util"
 )
 
 type SessionStore struct {
 	Dir string
 }
 
-func (store *SessionStore) Create(userID ID) (string, error) {
+func (store *SessionStore) Create(userID types.ID) (string, error) {
 	randomBytes := make([]byte, 32)
 	_, err := rand.Read(randomBytes)
 	if err != nil {
@@ -22,11 +25,11 @@ func (store *SessionStore) Create(userID ID) (string, error) {
 	for {
 		token = hex.EncodeToString(randomBytes)
 		filename := filepath.Join(store.Dir, token+".json")
-		if !fileExists(filename) {
+		if !util.FileExists(filename) {
 			break
 		}
 	}
-	session := Session{UserID: userID}
+	session := types.Session{UserID: userID}
 	err = store.Put(token, session)
 	if err != nil {
 		return "", err
@@ -34,7 +37,7 @@ func (store *SessionStore) Create(userID ID) (string, error) {
 	return token, nil
 }
 
-func (store *SessionStore) Put(token string, session Session) error {
+func (store *SessionStore) Put(token string, session types.Session) error {
 	b, err := json.MarshalIndent(session, "", "  ")
 	if err != nil {
 		return err

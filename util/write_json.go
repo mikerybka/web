@@ -1,4 +1,4 @@
-package web
+package util
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func writeJSON(filename string, v any) error {
+func WriteJSON(filename string, v any) error {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err

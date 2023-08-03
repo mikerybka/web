@@ -1,20 +1,22 @@
-package web
+package util
 
 import (
 	"encoding/json"
 	"os"
+
+	"github.com/mikerybka/web/types"
 )
 
 type Index struct {
 	File string
 }
 
-func (i *Index) Get(key string) (string, bool) {
+func (i *Index) Get(key string) (types.ID, bool) {
 	b, err := os.ReadFile(i.File)
 	if err != nil {
-		return "", false
+		return 0, false
 	}
-	index := map[string]string{}
+	index := map[string]types.ID{}
 	err = json.Unmarshal(b, &index)
 	if err != nil {
 		panic(err)
@@ -23,12 +25,12 @@ func (i *Index) Get(key string) (string, bool) {
 	return val, ok
 }
 
-func (i *Index) Set(key, val string) error {
+func (i *Index) Set(key string, val types.ID) error {
 	b, err := os.ReadFile(i.File)
 	if err != nil {
 		return err
 	}
-	index := map[string]string{}
+	index := map[string]types.ID{}
 	err = json.Unmarshal(b, &index)
 	if err != nil {
 		panic(err)

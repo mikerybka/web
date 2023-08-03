@@ -1,11 +1,11 @@
-package web
+package util
 
 import (
 	"encoding/json"
 	"os"
 )
 
-func readJSON(filename string, v any) error {
+func ReadJSON(filename string, v any) error {
 	f, err := os.Open(filename)
 	if err != nil {
 		return err

@@ -1,63 +1,79 @@
 package web
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
+	"fmt"
+	"strings"
+
+	"github.com/mikerybka/web/types"
+	"github.com/mikerybka/web/util"
 )
 
 type UserStore struct {
 	Dir string
 }
 
-func (us *UserStore) Get(id ID) (*User, error) {
-	b, err := os.ReadFile(filepath.Join(us.Dir, id.String()+".json"))
+func (us *UserStore) Get(id types.ID) (*types.User, error) {
+	store := util.JSONStore[types.User]{Dir: us.Dir}
+	return store.Get(id)
+}
+
+func (us *UserStore) Create(
+	firstName string,
+	lastName string,
+	email string,
+	phone string,
+) (*types.User, error) {
+	store := util.JSONStore[types.User]{Dir: us.Dir}
+
+	// Normalize input
+	firstName = util.NormalizeName(firstName)
+	lastName = util.NormalizeName(lastName)
+	email = strings.TrimSpace(strings.ToLower(email))
+	phone = util.FilterNonDigits(phone)
+
+	// Check for existing email or phone
+	_, ok := store.Index("emails").Get(email)
+	if ok {
+		return nil, fmt.Errorf("email %s already registered", email)
+	}
+	_, ok = store.Index("phones").Get(phone)
+	if ok {
+		return nil, fmt.Errorf("phone %s already registered", phone)
+	}
+
+	// Create the new user
+	user := types.User{
+		ID:        us.NextID(),
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
+		Phone:     phone,
+	}
+
+	// Write to storage
+	err := store.Put(user.ID, user)
 	if err != nil {
 		return nil, err
 	}
-	var user User
-	err = json.Unmarshal(b, &user)
+	err = store.Index("emails").Set(email, user.ID)
 	if err != nil {
 		return nil, err
 	}
+	err = store.Index("phones").Set(phone, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the new user
 	return &user, nil
 }
 
-func (us *UserStore) Put(id ID, user User) error {
-	b, err := json.MarshalIndent(user, "", "  ")
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filepath.Join(us.Dir, id.String()+".json"), b, 0644)
-	if err != nil {
-		return err
-	}
-	err = us.EmailIndex().Set(user.Email, id.String())
-	if err != nil {
-		return err
-	}
-	err = us.PhoneIndex().Set(user.Phone, id.String())
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (us *UserStore) EmailIndex() *Index {
-	return &Index{File: filepath.Join(us.Dir, "emails.json")}
-}
-
-func (us *UserStore) PhoneIndex() *Index {
-	return &Index{File: filepath.Join(us.Dir, "phones.json")}
-}
-
-func (us *UserStore) NextID() ID {
-	b, _ := os.ReadFile(filepath.Join(us.Dir, "nextid.txt"))
-	var id ID
-	json.Unmarshal(b, &id)
+func (us *UserStore) NextID() types.ID {
+	var id types.ID
+	path := util.JSONFileName(us.Dir, "nextid")
+	util.ReadJSON(path, &id)
 	nextID := id + 1
-	b, _ = json.Marshal(nextID)
-	err := os.WriteFile(filepath.Join(us.Dir, "nextid.txt"), b, 0644)
+	err := util.WriteJSON(path, nextID)
 	if err != nil {
 		panic(err)
 	}
